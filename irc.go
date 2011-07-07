@@ -149,12 +149,34 @@ func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
 		callbacks: make(map[string][]Callback),
 	}
 
+	//Send login packets
+	conn.SendLogin()
+
+	//Set up auto join of the channel, and alternate nickanmes
+	conn.SetUpAutoJoin()
+	conn.SetUpAltNick()
+
 	//Return our new struct
 	return
 }
 
+//Adds a callback to the handler
 func (conn *IRCConnection) AddCallback(cmd string, call Callback) {
 	conn.callbacks[cmd] = append(conn.callbacks[cmd], call)
+}
+
+//Convenience method for setting up join on connect
+func (conn *IRCConnection) SetUpAutoJoin() {
+	conn.AddCallback("376", func(c *IRCConnection, s []string) {
+		c.JoinChannel(conn.Info.Channel)
+	})
+}
+
+//Convenience method for setting up sending alternate nickname
+func (conn *IRCConnection) SetUpAltNick() {
+	conn.AddCallback("433", func(c *IRCConnection, s []string) {
+		c.SendNick(conn.Info.AltNick)
+	})
 }
 
 //Grabs lines from the IRCConnection and passes them to handlers
@@ -181,4 +203,10 @@ func (conn *IRCConnection) Handle() {
 			call(conn, chunks)
 		}
 	}
+}
+
+
+//Grabs the username from a full host specification
+func GetUsername(addr string) string {
+	return strings.TrimLeft(strings.Split(addr, "!", -1)[0], ":")
 }
