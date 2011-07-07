@@ -167,9 +167,12 @@ func (conn *IRCConnection) AddCallback(cmd string, call Callback) {
 
 //Convenience method for setting up join on connect
 func (conn *IRCConnection) SetUpAutoJoin() {
-	conn.AddCallback("376", func(c *IRCConnection, s []string) {
+	tmp := func(c *IRCConnection, s []string) {
 		c.JoinChannel(conn.Info.Channel)
-	})
+	}
+	for _, v := range []string{"376", "422"} {
+		conn.AddCallback(v, tmp)
+	}
 }
 
 //Convenience method for setting up sending alternate nickname
