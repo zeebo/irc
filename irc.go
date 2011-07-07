@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type Callback func(*IRCConnection, []string)
+
 //Struct for info about the irc connection
 type IRCInfo struct {
 	Channel string
@@ -20,10 +22,10 @@ type IRCInfo struct {
 
 //Struct for our irc connection
 type IRCConnection struct {
-	Conn   *net.TCPConn
-	RecvCh chan string
-	Info   IRCInfo
-	buf    []byte
+	Conn      *net.TCPConn
+	Info      IRCInfo
+	buf       []byte
+	callbacks map[string][]Callback
 }
 
 //Sends a nickname string
@@ -114,8 +116,15 @@ func (conn *IRCConnection) Emote(message string) (n int, err os.Error) {
 	return
 }
 
+//Prefixes a message with the privmsg to the channel
 func (conn *IRCConnection) prefixPrivmsgToChannel() (n int, err os.Error) {
 	return fmt.Fprint(conn.Conn, "privmsg ", conn.Info.Channel, " :")
+}
+
+//Send the login packet to the IRC server
+func (conn *IRCConnection) SendLogin() {
+	conn.SendNick(conn.Info.Nick)
+	fmt.Fprintln(conn.Conn, "user okco okco okco okco")
 }
 
 //Creates a new IRCConnection object ready to go
@@ -134,27 +143,23 @@ func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
 
 	//Create the new struct for the connection
 	conn = &IRCConnection{
-		Conn:   tcpConn,
-		RecvCh: make(chan string),
-		Info:   info,
-		buf:    make([]byte, 0),
+		Conn:      tcpConn,
+		Info:      info,
+		buf:       make([]byte, 0),
+		callbacks: make(map[string][]Callback),
 	}
 
-	//Start grabbing lines and sendding them down the channel
-	go conn.grabLines()
-
-	//Send the login packet to the IRC server
-	conn.SendNick(info.Nick)
-	fmt.Fprintln(tcpConn, "user okco okco okco okco")
-
-	//Return our new struct with the message channel
+	//Return our new struct
 	return
 }
 
-//Grabs lines from the IRCConnection and throws them down the RecvCh
-//Only sends down lines it didn't handle already. Handles PING, motd finished
-//and nickname in use messages.
-func (conn *IRCConnection) grabLines() {
+func (conn *IRCConnection) AddCallback(cmd string, call Callback) {
+	conn.callbacks[cmd] = append(conn.callbacks[cmd], call)
+}
+
+//Grabs lines from the IRCConnection and passes them to handlers
+//Handles PING automatically
+func (conn *IRCConnection) Handle() {
 	bufReader := bufio.NewReader(conn.Conn)
 	for {
 		cmd, err := bufReader.ReadString('\n')
@@ -172,13 +177,8 @@ func (conn *IRCConnection) grabLines() {
 		}
 
 		//Handle the other commands
-		switch chunks[1] {
-		case "376":
-			conn.JoinChannel(conn.Info.Channel)
-		case "433":
-			conn.SendNick(conn.Info.AltNick)
-		default:
-			conn.RecvCh <- cmd
+		for _, call := range conn.callbacks[strings.ToLower(chunks[1])] {
+			call(conn, chunks)
 		}
 	}
 }
