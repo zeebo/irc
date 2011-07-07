@@ -165,6 +165,17 @@ func (conn *IRCConnection) AddCallback(cmd string, call Callback) {
 	conn.callbacks[cmd] = append(conn.callbacks[cmd], call)
 }
 
+//Removes a callback from the handler
+func (conn *IRCConnection) DelCallback(cmd string, call Callback) {
+	calls := conn.callbacks[cmd]
+	for idx, other := range calls {
+		if other == call {
+			conn.callbacks[cmd] = append(calls[:idx], calls[idx+1:]...)
+			break
+		}
+	}
+}
+
 //Convenience method for setting up join on connect
 func (conn *IRCConnection) SetUpAutoJoin() {
 	tmp := func(c *IRCConnection, s []string) {
