@@ -7,6 +7,8 @@ type Module struct {
 	Info      string
 	Name      string
 	loaded    bool
+	OnLoad    func(*IRCConnection)
+	OnUnload  func(*IRCConnection)
 }
 
 func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
@@ -17,6 +19,10 @@ func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
 		conn.AddCallback(cmd, call)
 	}
 	module.loaded = true
+
+	if module.OnLoad != nil {
+		module.OnLoad(conn)
+	}
 	return nil
 }
 
@@ -28,6 +34,10 @@ func (conn *IRCConnection) unloadModule(module *Module) (err os.Error) {
 		conn.DelCallback(cmd, call)
 	}
 	module.loaded = false
+
+	if module.OnUnload != nil {
+		module.OnUnload(conn)
+	}
 	return nil
 }
 
