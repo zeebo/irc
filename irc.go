@@ -198,8 +198,13 @@ func (conn *IRCConnection) Handle() {
 			continue
 		}
 
+		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
+		if !exists {
+			continue
+		}
+
 		//Handle the other commands
-		for _, call := range conn.callbacks[strings.ToLower(chunks[1])] {
+		for _, call := range callbacks {
 			call(conn, chunks)
 		}
 	}
