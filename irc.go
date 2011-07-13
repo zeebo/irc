@@ -26,7 +26,7 @@ type IRCConnection struct {
 	Info      IRCInfo
 	buf       []byte
 	callbacks map[string][]Callback
-	modules   map[string]Module
+	modules   map[string]*Module
 }
 
 //Sends a nickname string

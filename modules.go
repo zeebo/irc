@@ -9,7 +9,7 @@ type Module struct {
 	loaded bool
 }
 
-func (conn *IRCConnection) loadModule(module Module) (err os.Error) {
+func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
 	if module.loaded {
 		return os.NewError("Module already loaded: " + module.Name)
 	}
@@ -20,7 +20,7 @@ func (conn *IRCConnection) loadModule(module Module) (err os.Error) {
 	return nil
 }
 
-func (conn *IRCConnection) unloadModule(module Module) (err os.Error) {
+func (conn *IRCConnection) unloadModule(module *Module) (err os.Error) {
 	if !module.loaded {
 		return os.NewError("Module not loaded: " + module.Name)
 	}
@@ -47,7 +47,7 @@ func (conn *IRCConnection) Unload(mod string) (err os.Error) {
 	return conn.unloadModule(module)
 }
 
-func (conn *IRCConnection) RegisterModule(module Module) (err os.Error) {
+func (conn *IRCConnection) RegisterModule(module *Module) (err os.Error) {
 	_, exists := conn.modules[module.Name]
 	if exists {
 		return os.NewError("Module already registered by that name: " + module.Name)
