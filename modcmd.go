@@ -13,8 +13,8 @@ conn := irc.NewConnection()
 conn.SetupModcmd("username1", "username2", "username3")
 */
 
-func (c *IRCConnection) SetupModcmd(admins ...string) {
-	handler := func(conn *IRCConnection, chunks []string) {
+func (c *Connection) SetupModcmd(admins ...string) {
+	handler := func(conn *Connection, chunks []string) {
 		if chunks[2] != conn.Info.Channel {
 			return
 		}
@@ -54,6 +54,30 @@ func (c *IRCConnection) SetupModcmd(admins ...string) {
 					fmt.Fprintln(conn, "Unloaded module:", word)
 				}
 			}
+		case ":.info":
+			for _, word := range chunks[4:] {
+				word = strings.Trim(word, "\r\n")
+				module, exists := conn.modules[word]
+				if !exists {
+					fmt.Fprintln(conn, "Module does not exist:", word)
+				} else {
+					fmt.Fprintf(conn, "%s: %s", word, module.Info)
+				}
+			}
+		case ":.loaded":
+			fmt.Fprint(conn, "Loaded modules: ")
+			for _, module := range conn.modules {
+				if module.loaded {
+					fmt.Fprint(conn, module.Name, " ")
+				}
+			}
+			fmt.Fprint(conn, "\n")
+		case ":.list":
+			fmt.Fprint(conn, "Modules: ")
+			for _, module := range conn.modules {
+				fmt.Fprint(conn, module.Name, " ")
+			}
+			fmt.Fprint(conn, "\n")
 		}
 	}
 

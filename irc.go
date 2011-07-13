@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-type Callback func(*IRCConnection, []string)
+type Callback func(*Connection, []string)
 
 //Struct for info about the irc connection
-type IRCInfo struct {
+type Info struct {
 	Channel string
 	Nick    string
 	AltNick string
@@ -21,26 +21,26 @@ type IRCInfo struct {
 }
 
 //Struct for our irc connection
-type IRCConnection struct {
+type Connection struct {
 	Conn      *net.TCPConn
-	Info      IRCInfo
+	Info      Info
 	buf       []byte
 	callbacks map[string][]Callback
 	modules   map[string]*Module
 }
 
 //Sends a nickname string
-func (conn *IRCConnection) SendNick(nick string) {
+func (conn *Connection) SendNick(nick string) {
 	fmt.Fprintln(conn.Conn, "nick", nick)
 }
 
 //Joins a channel
-func (conn *IRCConnection) JoinChannel(channel string) {
+func (conn *Connection) JoinChannel(channel string) {
 	fmt.Fprintln(conn.Conn, "join", channel)
 }
 
 //Writes the bytes into the buffer
-func (conn *IRCConnection) Write(p []byte) (n int, err os.Error) {
+func (conn *Connection) Write(p []byte) (n int, err os.Error) {
 	//append bytes
 	conn.buf = append(conn.buf, p...)
 
@@ -52,7 +52,7 @@ func (conn *IRCConnection) Write(p []byte) (n int, err os.Error) {
 }
 
 //Flushes any fully formed messages out to the channel
-func (conn *IRCConnection) Flush() {
+func (conn *Connection) Flush() {
 	//split the messages in the buffer into individual messages
 	messages := bytes.SplitAfter(conn.buf, []byte{'\n'}, -1)
 
@@ -79,7 +79,7 @@ func (conn *IRCConnection) Flush() {
 }
 
 //Sends a fully formed message to the channel
-func (conn *IRCConnection) SendMessage(message string) (n int, err os.Error) {
+func (conn *Connection) SendMessage(message string) (n int, err os.Error) {
 	//Prime the message. If there are any problems, we sent 0 bytes of the message
 	if n, err = conn.prefixPrivmsgToChannel(); err != nil {
 		return 0, err
@@ -97,7 +97,7 @@ func (conn *IRCConnection) SendMessage(message string) (n int, err os.Error) {
 }
 
 //Sends an emote to the channel
-func (conn *IRCConnection) Emote(message string) (n int, err os.Error) {
+func (conn *Connection) Emote(message string) (n int, err os.Error) {
 	//Prime the message. If there are any problems, we sent 0 bytes of the message
 	if n, err = conn.prefixPrivmsgToChannel(); err != nil {
 		return 0, err
@@ -118,18 +118,18 @@ func (conn *IRCConnection) Emote(message string) (n int, err os.Error) {
 }
 
 //Prefixes a message with the privmsg to the channel
-func (conn *IRCConnection) prefixPrivmsgToChannel() (n int, err os.Error) {
+func (conn *Connection) prefixPrivmsgToChannel() (n int, err os.Error) {
 	return fmt.Fprint(conn.Conn, "privmsg ", conn.Info.Channel, " :")
 }
 
 //Send the login packet to the IRC server
-func (conn *IRCConnection) SendLogin() {
+func (conn *Connection) SendLogin() {
 	conn.SendNick(conn.Info.Nick)
 	fmt.Fprintln(conn.Conn, "user okco okco okco okco")
 }
 
-//Creates a new IRCConnection object ready to go
-func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
+//Creates a new Connection object ready to go
+func NewConnection(info Info) (conn *Connection, err os.Error) {
 	//Resolve the address of the irc server
 	addr, err := net.ResolveTCPAddr("tcp", info.Server)
 	if err != nil {
@@ -143,7 +143,7 @@ func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
 	}
 
 	//Create the new struct for the connection
-	conn = &IRCConnection{
+	conn = &Connection{
 		Conn:      tcpConn,
 		Info:      info,
 		buf:       make([]byte, 0),
@@ -163,8 +163,8 @@ func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
 }
 
 //Convenience method for setting up join on connect
-func (conn *IRCConnection) SetUpAutoJoin() {
-	tmp := func(c *IRCConnection, s []string) {
+func (conn *Connection) SetUpAutoJoin() {
+	tmp := func(c *Connection, s []string) {
 		c.JoinChannel(conn.Info.Channel)
 	}
 	for _, v := range []string{"376", "422"} {
@@ -173,15 +173,15 @@ func (conn *IRCConnection) SetUpAutoJoin() {
 }
 
 //Convenience method for setting up sending alternate nickname
-func (conn *IRCConnection) SetUpAltNick() {
-	conn.AddCallback("433", func(c *IRCConnection, s []string) {
+func (conn *Connection) SetUpAltNick() {
+	conn.AddCallback("433", func(c *Connection, s []string) {
 		c.SendNick(conn.Info.AltNick)
 	})
 }
 
-//Grabs lines from the IRCConnection and passes them to handlers
+//Grabs lines from the Connection and passes them to handlers
 //Handles PING automatically
-func (conn *IRCConnection) Handle() {
+func (conn *Connection) Handle() {
 	bufReader := bufio.NewReader(conn.Conn)
 	for {
 		cmd, err := bufReader.ReadString('\n')

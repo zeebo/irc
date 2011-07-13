@@ -7,11 +7,11 @@ type Module struct {
 	Info      string
 	Name      string
 	loaded    bool
-	OnLoad    func(*IRCConnection)
-	OnUnload  func(*IRCConnection)
+	OnLoad    func(*Connection)
+	OnUnload  func(*Connection)
 }
 
-func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
+func (conn *Connection) loadModule(module *Module) (err os.Error) {
 	if module.loaded {
 		return os.NewError("Module already loaded: " + module.Name)
 	}
@@ -26,7 +26,7 @@ func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
 	return nil
 }
 
-func (conn *IRCConnection) unloadModule(module *Module) (err os.Error) {
+func (conn *Connection) unloadModule(module *Module) (err os.Error) {
 	if !module.loaded {
 		return os.NewError("Module not loaded: " + module.Name)
 	}
@@ -41,7 +41,7 @@ func (conn *IRCConnection) unloadModule(module *Module) (err os.Error) {
 	return nil
 }
 
-func (conn *IRCConnection) Load(mod string) (err os.Error) {
+func (conn *Connection) Load(mod string) (err os.Error) {
 	module, exists := conn.modules[mod]
 	if !exists {
 		return os.NewError("Unknown module: " + mod)
@@ -49,7 +49,7 @@ func (conn *IRCConnection) Load(mod string) (err os.Error) {
 	return conn.loadModule(module)
 }
 
-func (conn *IRCConnection) Unload(mod string) (err os.Error) {
+func (conn *Connection) Unload(mod string) (err os.Error) {
 	module, exists := conn.modules[mod]
 	if !exists {
 		return os.NewError("Unknown module: " + mod)
@@ -57,7 +57,7 @@ func (conn *IRCConnection) Unload(mod string) (err os.Error) {
 	return conn.unloadModule(module)
 }
 
-func (conn *IRCConnection) RegisterModule(module *Module) (err os.Error) {
+func (conn *Connection) RegisterModule(module *Module) (err os.Error) {
 	_, exists := conn.modules[module.Name]
 	if exists {
 		return os.NewError("Module already registered by that name: " + module.Name)

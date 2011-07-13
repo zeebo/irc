@@ -1,12 +1,12 @@
 package irc
 
 //Adds a callback to the handler
-func (conn *IRCConnection) AddCallback(cmd string, call Callback) {
+func (conn *Connection) AddCallback(cmd string, call Callback) {
 	conn.callbacks[cmd] = append(conn.callbacks[cmd], call)
 }
 
 //Removes a callback from the handler
-func (conn *IRCConnection) DelCallback(cmd string, call Callback) {
+func (conn *Connection) DelCallback(cmd string, call Callback) {
 	calls, exists := conn.callbacks[cmd]
 	if !exists {
 		return
@@ -21,7 +21,7 @@ func (conn *IRCConnection) DelCallback(cmd string, call Callback) {
 }
 
 //Checks if a specified callback exists
-func (conn *IRCConnection) HasCallback(cmd string, call Callback) (ret bool) {
+func (conn *Connection) HasCallback(cmd string, call Callback) (ret bool) {
 	calls, exists := conn.callbacks[cmd]
 	if !exists {
 		return false
