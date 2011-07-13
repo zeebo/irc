@@ -4,9 +4,9 @@ import "os"
 
 type Module struct {
 	Callbacks map[string]Callback
-	Info string
-	Name string
-	loaded bool
+	Info      string
+	Name      string
+	loaded    bool
 }
 
 func (conn *IRCConnection) loadModule(module *Module) (err os.Error) {
