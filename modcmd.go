@@ -61,7 +61,7 @@ func (c *Connection) SetupModcmd(admins ...string) {
 				if !exists {
 					fmt.Fprintln(conn, "Module does not exist:", word)
 				} else {
-					fmt.Fprintf(conn, "%s: %s", word, module.Info)
+					fmt.Fprintf(conn, "%s: %s\n", word, module.Info)
 				}
 			}
 		case ":.loaded":
