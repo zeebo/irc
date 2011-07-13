@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+/*
+IRC package for creating IRC bots. Has a concept of modules and commands,
+and conforms to the io.Writer protocol.
+*/
+
+//Callback functions
 type Callback func(*Connection, []string)
 
 //Struct for info about the irc connection

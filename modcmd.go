@@ -4,21 +4,36 @@ import (
 	"fmt"
 	"strings"
 )
+
 /*
-Defines a module for dynamic loading/unloading of modules from irc commands
+Sets up a callback for dynamic loading/unloading of modules from irc commands
 
 To load, use
 
 conn := irc.NewConnection()
 conn.SetupModcmd("username1", "username2", "username3")
+
+Then in irc, you can do things like
+
+.load <module1> [module2] [module3] ... [moduleN]
+.unload <module1> [module2] [module3] ... [moduleN]
+.info <module1> [module2] [module3] ... [moduleN]
+.list
+.loaded
+
+to control and inspect module behavior
 */
 
+//Sets up the callback for loading and unloading. Don't call this twice
+//for any admin. You'll probably get some wacky behaviors.
 func (c *Connection) SetupModcmd(admins ...string) {
+	//Create a function that closes on the value of admins
 	handler := func(conn *Connection, chunks []string) {
 		if chunks[2] != conn.Info.Channel {
 			return
 		}
 
+		//Make sure the user is an admin
 		username := GetUsername(chunks[0])
 		var found bool = false
 
@@ -29,10 +44,12 @@ func (c *Connection) SetupModcmd(admins ...string) {
 			}
 		}
 
+		//bail out if they arent found
 		if !found {
 			return
 		}
 
+		//switch on the command they sent
 		switch strings.Trim(chunks[3], "\r\n") {
 		case ":.load":
 			for _, word := range chunks[4:] {
@@ -81,5 +98,6 @@ func (c *Connection) SetupModcmd(admins ...string) {
 		}
 	}
 
+	//Add the callback to the connection
 	c.AddCallback("privmsg", handler)
 }
