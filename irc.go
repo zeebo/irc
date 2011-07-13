@@ -198,6 +198,12 @@ func (conn *IRCConnection) Handle() {
 			continue
 		}
 
+		//Break out if it only sent one word
+		if len(chunks) == 1 {
+			continue
+		}
+
+		//Get the callbacks
 		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
 		if !exists {
 			continue
