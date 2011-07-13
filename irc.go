@@ -148,6 +148,7 @@ func NewConnection(info IRCInfo) (conn *IRCConnection, err os.Error) {
 		Info:      info,
 		buf:       make([]byte, 0),
 		callbacks: make(map[string][]Callback),
+		modules:   make(map[string]*Module),
 	}
 
 	//Send login packets
