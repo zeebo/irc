@@ -192,7 +192,7 @@ func (conn *Connection) Handle() {
 	for {
 		cmd, err := bufReader.ReadString('\n')
 		if err != nil {
-			log.Print(err)
+			log.Print(conn, err)
 			return
 		}
 
