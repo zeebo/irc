@@ -190,6 +190,11 @@ func (conn *Connection) SetUpAltNick() {
 func (conn *Connection) Handle() {
 	bufReader := bufio.NewReader(conn.Conn)
 	for {
+		//If the read connection is closed, break out
+		if closed(conn.Conn) {
+			break
+		}
+
 		cmd, err := bufReader.ReadString('\n')
 		if err != nil {
 			log.Print(err)
