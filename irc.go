@@ -60,7 +60,7 @@ func (conn *Connection) Write(p []byte) (n int, err os.Error) {
 //Flushes any fully formed messages out to the channel
 func (conn *Connection) Flush() {
 	//split the messages in the buffer into individual messages
-	messages := bytes.SplitAfter(conn.buf, []byte{'\n'}, -1)
+	messages := bytes.SplitAfter(conn.buf, []byte{'\n'})
 
 	//if theres only one message, then theres no newline yet
 	//so continue to buffer
@@ -197,7 +197,7 @@ func (conn *Connection) Handle() {
 		}
 
 		//Handle some basic commands
-		chunks := strings.Split(cmd, " ", -1)
+		chunks := strings.Split(cmd, " ")
 
 		//Check for PING command
 		if strings.HasPrefix(cmd, "PING") {
@@ -226,5 +226,5 @@ func (conn *Connection) Handle() {
 
 //Grabs the username from a full host specification
 func GetUsername(addr string) string {
-	return strings.TrimLeft(strings.Split(addr, "!", -1)[0], ":")
+	return strings.TrimLeft(strings.Split(addr, "!")[0], ":")
 }
