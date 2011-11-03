@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 /*
@@ -33,6 +34,7 @@ type Connection struct {
 	buf       []byte
 	callbacks map[string][]Callback
 	modules   map[string]*Module
+	ticker    *time.Ticker
 }
 
 //Sends a nickname string
@@ -86,6 +88,9 @@ func (conn *Connection) Flush() {
 
 //Sends a fully formed message to the channel
 func (conn *Connection) SendMessage(message string) (n int, err os.Error) {
+	//grab a tick
+	<-conn.ticker.C
+
 	//Prime the message. If there are any problems, we sent 0 bytes of the message
 	if n, err = conn.prefixPrivmsgToChannel(); err != nil {
 		return 0, err
@@ -155,6 +160,7 @@ func NewConnection(info Info) (conn *Connection, err os.Error) {
 		buf:       make([]byte, 0),
 		callbacks: make(map[string][]Callback),
 		modules:   make(map[string]*Module),
+		ticker:    time.NewTicker(1e9),
 	}
 
 	//Send login packets
