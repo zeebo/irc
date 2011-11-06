@@ -220,6 +220,7 @@ func (conn *Connection) Handle() {
 		if len(chunks) > 3 && len(chunks[3]) > 1 {
 			chunks[3] = chunks[3][1:] //strip off the left :
 		}
+		chunks[len(chunks) - 1] = strings.TrimSpace(chunks[len(chunks) - 1])
 		fmt.Println(chunks)
 
 		//Get the callbacks

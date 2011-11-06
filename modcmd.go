@@ -50,8 +50,8 @@ func (c *Connection) SetupModcmd(admins ...string) {
 		}
 
 		//switch on the command they sent
-		switch strings.Trim(chunks[3], "\r\n") {
-		case ":.load":
+		switch chunks[3] {
+		case ".load":
 			for _, word := range chunks[4:] {
 				word = strings.Trim(word, "\r\n")
 				err := conn.Load(word)
@@ -61,7 +61,7 @@ func (c *Connection) SetupModcmd(admins ...string) {
 					fmt.Fprintln(conn, "Loaded module:", word)
 				}
 			}
-		case ":.unload":
+		case ".unload":
 			for _, word := range chunks[4:] {
 				word = strings.Trim(word, "\r\n")
 				err := conn.Unload(word)
@@ -71,7 +71,7 @@ func (c *Connection) SetupModcmd(admins ...string) {
 					fmt.Fprintln(conn, "Unloaded module:", word)
 				}
 			}
-		case ":.info":
+		case ".info":
 			for _, word := range chunks[4:] {
 				word = strings.Trim(word, "\r\n")
 				module, exists := conn.modules[word]
@@ -81,7 +81,7 @@ func (c *Connection) SetupModcmd(admins ...string) {
 					fmt.Fprintf(conn, "%s: %s\n", word, module.Info)
 				}
 			}
-		case ":.loaded":
+		case ".loaded":
 			fmt.Fprint(conn, "Loaded modules: ")
 			for _, module := range conn.modules {
 				if module.loaded {
@@ -89,7 +89,7 @@ func (c *Connection) SetupModcmd(admins ...string) {
 				}
 			}
 			fmt.Fprint(conn, "\n")
-		case ":.list":
+		case ".list":
 			fmt.Fprint(conn, "Modules: ")
 			for _, module := range conn.modules {
 				fmt.Fprint(conn, module.Name, " ")
