@@ -216,6 +216,10 @@ func (conn *Connection) Handle() {
 			continue
 		}
 
+		if len(chunks) >= 2 {
+			chunks[3] = chunks[3][1:] //strip off the left :
+		}
+
 		//Get the callbacks
 		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
 		if !exists {
