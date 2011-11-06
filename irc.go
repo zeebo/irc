@@ -216,12 +216,10 @@ func (conn *Connection) Handle() {
 			continue
 		}
 
-		fmt.Println(chunks)
 		if len(chunks) > 3 && len(chunks[3]) > 1 {
 			chunks[3] = chunks[3][1:] //strip off the left :
 		}
 		chunks[len(chunks) - 1] = strings.TrimSpace(chunks[len(chunks) - 1])
-		fmt.Println(chunks)
 
 		//Get the callbacks
 		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
