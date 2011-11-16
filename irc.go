@@ -88,6 +88,23 @@ func (conn *Connection) Flush() {
 
 //Sends a fully formed message to the channel
 func (conn *Connection) SendMessage(message string) (n int, err os.Error) {
+	var i, c, sn int
+	for i < len(message) {
+		c = i + 200
+		if c > len(message) {
+			c = len(message)
+		}
+		n, err = conn.sendMessage(message[i:c])
+		if err != nil {
+			return
+		}
+		sn += n
+		i = c
+	}
+	return sn, err
+}
+
+func (conn *Connection) sendMessage(message string) (n int, err os.Error) {
 	//grab a tick
 	<-conn.ticker.C
 
@@ -219,7 +236,7 @@ func (conn *Connection) Handle() {
 		if len(chunks) > 3 && len(chunks[3]) > 1 {
 			chunks[3] = chunks[3][1:] //strip off the left :
 		}
-		chunks[len(chunks) - 1] = strings.TrimSpace(chunks[len(chunks) - 1])
+		chunks[len(chunks)-1] = strings.TrimSpace(chunks[len(chunks)-1])
 
 		//Get the callbacks
 		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
@@ -233,7 +250,6 @@ func (conn *Connection) Handle() {
 		}
 	}
 }
-
 
 //Grabs the username from a full host specification
 func GetUsername(addr string) string {
