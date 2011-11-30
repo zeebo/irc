@@ -12,7 +12,7 @@ import (
 )
 
 /*
-IRC package for creating IRC bots. Has a concept of modules and commands,
+package irc for creating IRC bots. Has a concept of modules and commands,
 and conforms to the io.Writer protocol.
 */
 
