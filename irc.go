@@ -37,7 +37,7 @@ type Connection struct {
 	ticker    *time.Ticker
 }
 
-//Sends a nickname string
+//Sends a nickname command 
 func (conn *Connection) SendNick(nick string) {
 	fmt.Fprintln(conn.Conn, "nick", nick)
 }
