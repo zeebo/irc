@@ -1,6 +1,6 @@
 package irc
 
-import "os"
+import "errors"
 
 /*
 Handles module loading, unloading, and registration for connections.
@@ -17,13 +17,11 @@ type Module struct {
 }
 
 //Loads a module and calls it's callback
-func (conn *Connection) loadModule(module *Module) (err os.Error) {
+func (conn *Connection) loadModule(module *Module) (err error) {
 	if module.loaded {
-		return os.NewError("Module already loaded: " + module.Name)
+		return errors.New("Module already loaded: " + module.Name)
 	}
-	for cmd, call := range module.Callbacks {
-		conn.AddCallback(cmd, call)
-	}
+
 	module.loaded = true
 
 	if module.OnLoad != nil {
@@ -33,15 +31,11 @@ func (conn *Connection) loadModule(module *Module) (err os.Error) {
 }
 
 //Unloads a module and calls it's callback
-func (conn *Connection) unloadModule(module *Module) (err os.Error) {
+func (conn *Connection) unloadModule(module *Module) (err error) {
 	if !module.loaded {
-		return os.NewError("Module not loaded: " + module.Name)
-	}
-	for cmd, call := range module.Callbacks {
-		conn.DelCallback(cmd, call)
+		return errors.New("Module not loaded: " + module.Name)
 	}
 	module.loaded = false
-
 	if module.OnUnload != nil {
 		module.OnUnload(conn)
 	}
@@ -49,42 +43,41 @@ func (conn *Connection) unloadModule(module *Module) (err os.Error) {
 }
 
 //Loads a module
-func (conn *Connection) Load(mod string) (err os.Error) {
+func (conn *Connection) Load(mod string) (err error) {
 	module, exists := conn.modules[mod]
 	if !exists {
-		return os.NewError("Unknown module: " + mod)
+		return errors.New("Unknown module: " + mod)
 	}
 	return conn.loadModule(module)
 }
 
 //Unloads a module
-func (conn *Connection) Unload(mod string) (err os.Error) {
+func (conn *Connection) Unload(mod string) (err error) {
 	module, exists := conn.modules[mod]
 	if !exists {
-		return os.NewError("Unknown module: " + mod)
+		return errors.New("Unknown module: " + mod)
 	}
 	return conn.unloadModule(module)
 }
 
 //Register a module for loading
-func (conn *Connection) RegisterModule(module *Module) (err os.Error) {
+func (conn *Connection) RegisterModule(module *Module) (err error) {
 	_, exists := conn.modules[module.Name]
 	if exists {
-		return os.NewError("Module already registered by that name: " + module.Name)
+		return errors.New("Module already registered by that name: " + module.Name)
 	}
 	conn.modules[module.Name] = module
 	return nil
 }
 
-
 //Registers all the modules in the list passed. Modules will only be registered
 //if every module in the list is registered sucessfully
-func (conn *Connection) RegisterModules(modules []*Module) (err os.Error) {
+func (conn *Connection) RegisterModules(modules []*Module) (err error) {
 	for i, module := range modules {
 		if err := conn.RegisterModule(module); err != nil {
 			//Unregister them because we had an error
 			for _, mod := range modules[:i] {
-				conn.modules[mod.Name] = nil, false
+				delete(conn.modules, mod.Name)
 			}
 			return err
 		}

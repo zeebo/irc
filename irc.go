@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"strings"
 	"time"
 )
@@ -48,7 +47,7 @@ func (conn *Connection) JoinChannel(channel string) {
 }
 
 //Writes the bytes into the buffer
-func (conn *Connection) Write(p []byte) (n int, err os.Error) {
+func (conn *Connection) Write(p []byte) (n int, err error) {
 	//append bytes
 	conn.buf = append(conn.buf, p...)
 
@@ -87,7 +86,7 @@ func (conn *Connection) Flush() {
 }
 
 //Sends a fully formed message to the channel
-func (conn *Connection) SendMessage(message string) (n int, err os.Error) {
+func (conn *Connection) SendMessage(message string) (n int, err error) {
 	var i, c, sn int
 	for i < len(message) {
 		c = i + 200
@@ -104,7 +103,7 @@ func (conn *Connection) SendMessage(message string) (n int, err os.Error) {
 	return sn, err
 }
 
-func (conn *Connection) sendMessage(message string) (n int, err os.Error) {
+func (conn *Connection) sendMessage(message string) (n int, err error) {
 	//grab a tick
 	<-conn.ticker.C
 
@@ -125,7 +124,7 @@ func (conn *Connection) sendMessage(message string) (n int, err os.Error) {
 }
 
 //Sends an emote to the channel
-func (conn *Connection) Emote(message string) (n int, err os.Error) {
+func (conn *Connection) Emote(message string) (n int, err error) {
 	//Prime the message. If there are any problems, we sent 0 bytes of the message
 	if n, err = conn.prefixPrivmsgToChannel(); err != nil {
 		return 0, err
@@ -146,7 +145,7 @@ func (conn *Connection) Emote(message string) (n int, err os.Error) {
 }
 
 //Prefixes a message with the privmsg to the channel
-func (conn *Connection) prefixPrivmsgToChannel() (n int, err os.Error) {
+func (conn *Connection) prefixPrivmsgToChannel() (n int, err error) {
 	return fmt.Fprint(conn.Conn, "privmsg ", conn.Info.Channel, " :")
 }
 
@@ -157,7 +156,7 @@ func (conn *Connection) SendLogin() {
 }
 
 //Creates a new Connection object ready to go
-func NewConnection(info Info) (conn *Connection, err os.Error) {
+func NewConnection(info Info) (conn *Connection, err error) {
 	//Resolve the address of the irc server
 	addr, err := net.ResolveTCPAddr("tcp", info.Server)
 	if err != nil {
@@ -238,13 +237,23 @@ func (conn *Connection) Handle() {
 		}
 		chunks[len(chunks)-1] = strings.TrimSpace(chunks[len(chunks)-1])
 
-		//Get the callbacks
-		callbacks, exists := conn.callbacks[strings.ToLower(chunks[1])]
-		if !exists {
-			continue
+		//loop over loaded modules
+		for _, mod := range conn.modules {
+			if !mod.loaded {
+				continue
+			}
+
+			//check for a callback
+			if call, ex := mod.Callbacks[strings.ToLower(chunks[1])]; ex {
+				call(conn, chunks)
+			}
 		}
 
-		//Handle the other commands
+		//now do plain callbacks
+		callbacks, ex := conn.callbacks[strings.ToLower(chunks[1])]
+		if !ex {
+			continue
+		}
 		for _, call := range callbacks {
 			call(conn, chunks)
 		}
