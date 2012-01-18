@@ -20,10 +20,11 @@ type Callback func(*Connection, []string)
 
 //Struct for info about the irc connection
 type Info struct {
-	Channel string
-	Nick    string
-	AltNick string
-	Server  string
+	Channel  string
+	Nick     string
+	AltNick  string
+	Server   string
+	Password string
 }
 
 //Struct for our irc connection
@@ -151,6 +152,9 @@ func (conn *Connection) prefixPrivmsgToChannel() (n int, err error) {
 
 //Send the login packet to the IRC server
 func (conn *Connection) SendLogin() {
+	if conn.Info.Password != "" {
+		fmt.Fprintln(conn.Conn, "pass", conn.Info.Password)
+	}
 	conn.SendNick(conn.Info.Nick)
 	fmt.Fprintln(conn.Conn, "user okco okco okco okco")
 }
