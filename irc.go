@@ -106,7 +106,7 @@ func (conn *Connection) SendMessage(message string) (n int, err error) {
 
 func (conn *Connection) sendMessage(message string) (n int, err error) {
 	//grab a tick
-	<-conn.ticker.C
+	// <-conn.ticker.C
 
 	//Prime the message. If there are any problems, we sent 0 bytes of the message
 	if n, err = conn.prefixPrivmsgToChannel(); err != nil {
