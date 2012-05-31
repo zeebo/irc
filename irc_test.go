@@ -2,5 +2,5 @@ package irc
 
 import "testing"
 
-funcc TestNothing(t *testing.T) {
+func TestNothing(t *testing.T) {
 }
